@@ -1,0 +1,59 @@
+═══════════════════════════════════════════════════════════════
+  INSTALL FLUTTER - REQUIRED STEP
+═══════════════════════════════════════════════════════════════
+
+❌ Flutter is NOT installed on your system.
+
+═══════════════════════════════════════════════════════════════
+  INSTALLATION STEPS
+═══════════════════════════════════════════════════════════════
+
+STEP 1: Download Flutter
+───────────────────────────────────────────────────────────────
+1. Visit: https://docs.flutter.dev/get-started/install/windows
+2. Download Flutter SDK (zip file)
+3. Extract to: C:\src\flutter
+
+STEP 2: Add to PATH
+───────────────────────────────────────────────────────────────
+1. Press Windows + R
+2. Type: sysdm.cpl
+3. Click "Environment Variables"
+4. Edit "Path" under User variables
+5. Add: C:\src\flutter\bin
+6. Click OK on all dialogs
+7. CLOSE AND REOPEN your terminal
+
+STEP 3: Verify Installation
+───────────────────────────────────────────────────────────────
+Open NEW terminal and run:
+flutter --version
+
+STEP 4: Install Android Studio
+───────────────────────────────────────────────────────────────
+1. Download: https://developer.android.com/studio
+2. Install Android Studio
+3. Install Android SDK (API 33+)
+4. Accept licenses: flutter doctor --android-licenses
+
+STEP 5: Install Project Dependencies
+───────────────────────────────────────────────────────────────
+cd C:\Users\KLPCADMIN\Desktop\proj
+flutter pub get
+
+STEP 6: Run the App
+───────────────────────────────────────────────────────────────
+flutter run
+
+═══════════════════════════════════════════════════════════════
+  QUICK CHECK
+═══════════════════════════════════════════════════════════════
+
+After installing Flutter, verify with:
+flutter --version
+flutter doctor
+flutter devices
+
+═══════════════════════════════════════════════════════════════
+
+For detailed instructions, see: INSTALL_FLUTTER.md

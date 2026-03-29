@@ -1,0 +1,56 @@
+name: sos_safety_app
+description: SOS & Geo-Fencing Mobile Application for Women and Elderly Safety
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase (newer versions fix web / Dart JS interop with current SDK)
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.4.0
+  cloud_firestore: ^5.5.0
+  
+  # Location & Maps
+  geolocator: ^10.1.0
+  google_maps_flutter: ^2.5.0
+  
+  # Sensors
+  sensors_plus: ^4.0.2
+  permission_handler: ^11.1.0
+  
+  # SMS & Phone
+  url_launcher: ^6.2.2
+  telephony: ^0.2.0
+  
+  # Storage (Offline-first)
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.0
+  
+  # Background Services
+  workmanager: ^0.5.2
+  flutter_background_service: ^5.0.5
+  
+  # Audio (for panic detection)
+  record: ^6.2.0
+  
+  # UI & Utils
+  cupertino_icons: ^1.0.6
+  intl: ^0.18.1
+  http: ^1.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
