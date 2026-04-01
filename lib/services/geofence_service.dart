@@ -6,6 +6,7 @@ import 'sos_service.dart';
 import 'emergency_contact_service.dart';
 import '../models/safe_zone.dart';
 import 'safe_zone_service.dart';
+import 'twilio_service.dart'; // add at top
 
 class GeofenceService {
   static final GeofenceService _instance = GeofenceService._internal();
@@ -84,21 +85,11 @@ Time: ${DateTime.now().toString()}
       final contactService = EmergencyContactService();
       final contacts = await contactService.getEmergencyContacts();
 
-      for (var contact in contacts) {
-        try {
-          // Send SMS
-          final telephony = Telephony.instance;
-          await telephony.sendSms(
-            to: contact.phone,
-            message: message,
-            statusListener: (SendStatus status) {
-              print('Geofence alert SMS status: $status');
-            },
-          );
-        } catch (e) {
-          print('Failed to send geofence alert: $e');
-        }
-      }
+final twilio = TwilioService();
+for (var contact in contacts) {
+  await twilio.sendSMS(to: contact.phone, message: message);
+}
+
     } catch (e) {
       print('Error handling zone exit: $e');
     }
