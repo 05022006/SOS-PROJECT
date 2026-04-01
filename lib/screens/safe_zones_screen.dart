@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/safe_zone.dart';
-import '../../services/safe_zone_service.dart';
+import '../models/safe_zone.dart';
+import '../services/safe_zone_service.dart';
 import 'add_edit_zone_screen.dart';
 
 class SafeZonesScreen extends StatefulWidget {

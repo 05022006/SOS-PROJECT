@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../models/emergency_contact.dart';
-import '../../services/emergency_contact_service.dart';
+import '../models/emergency_contact.dart';
+import '../services/emergency_contact_service.dart';
 import 'add_edit_contact_screen.dart';
 
 class EmergencyContactsScreen extends StatefulWidget {

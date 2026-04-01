@@ -5,25 +5,30 @@ import '../models/safe_zone.dart';
 import 'auth_service.dart';
 
 class SafeZoneService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthService _authService = AuthService();
   static const String _localStorageKey = 'safe_zones';
 
-  String? get _userId => _authService.currentUser?.uid;
+  FirebaseFirestore? get _firestore => AuthService.firebaseAvailable ? FirebaseFirestore.instance : null;
+
+  Future<String?> get _userId async {
+    final user = await _authService.currentUser;
+    return user?.uid;
+  }
 
   Future<List<SafeZone>> getSafeZones() async {
     // Try to get from local storage first (offline-first)
     List<SafeZone> localZones = await _getLocalZones();
 
-    if (_userId == null) {
+    final userId = await _userId;
+    if (userId == null || _firestore == null) {
       return localZones;
     }
 
     try {
       // Try to sync from Firestore
-      QuerySnapshot snapshot = await _firestore
+      QuerySnapshot snapshot = await _firestore!
           .collection('users')
-          .doc(_userId)
+          .doc(userId)
           .collection('safe_zones')
           .get();
 
@@ -49,15 +54,23 @@ class SafeZoneService {
   }
 
   Future<void> addSafeZone(SafeZone zone) async {
-    if (_userId == null) {
+    final userId = await _userId;
+    if (userId == null) {
       throw Exception('User not authenticated');
+    }
+
+    if (_firestore == null) {
+      List<SafeZone> zones = await _getLocalZones();
+      zones.add(zone.copyWith(id: DateTime.now().millisecondsSinceEpoch.toString()));
+      await _saveLocalZones(zones);
+      return;
     }
 
     try {
       // Add to Firestore
-      DocumentReference docRef = await _firestore
+      DocumentReference docRef = await _firestore!
           .collection('users')
-          .doc(_userId)
+          .doc(userId)
           .collection('safe_zones')
           .add(zone.toMap());
 
@@ -75,18 +88,21 @@ class SafeZoneService {
   }
 
   Future<void> updateSafeZone(SafeZone zone) async {
-    if (_userId == null || zone.id == null) {
+    final userId = await _userId;
+    if (userId == null || zone.id == null) {
       throw Exception('Invalid zone or user not authenticated');
     }
 
     try {
-      // Update in Firestore
-      await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('safe_zones')
-          .doc(zone.id)
-          .update(zone.toMap());
+      if (_firestore != null) {
+        // Update in Firestore
+        await _firestore!
+            .collection('users')
+            .doc(userId)
+            .collection('safe_zones')
+            .doc(zone.id)
+            .update(zone.toMap());
+      }
 
       // Update local storage
       List<SafeZone> zones = await _getLocalZones();
@@ -108,18 +124,21 @@ class SafeZoneService {
   }
 
   Future<void> deleteSafeZone(String zoneId) async {
-    if (_userId == null) {
+    final userId = await _userId;
+    if (userId == null) {
       throw Exception('User not authenticated');
     }
 
     try {
       // Delete from Firestore
-      await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('safe_zones')
-          .doc(zoneId)
-          .delete();
+      if (_firestore != null) {
+        await _firestore!
+            .collection('users')
+            .doc(userId)
+            .collection('safe_zones')
+            .doc(zoneId)
+            .delete();
+      }
 
       // Update local storage
       List<SafeZone> zones = await _getLocalZones();

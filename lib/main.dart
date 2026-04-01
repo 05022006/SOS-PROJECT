@@ -9,13 +9,29 @@ import 'services/background_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  // Initialize Firebase (skip if placeholder keys are present)
+  final options = DefaultFirebaseOptions.currentPlatform;
+  final hasPlaceholder = options.apiKey == 'YOUR_API_KEY' ||
+      options.appId == 'YOUR_APP_ID' ||
+      options.projectId == 'YOUR_PROJECT_ID';
+
+  if (!hasPlaceholder) {
+    try {
+      await Firebase.initializeApp(options: options);
+      print('Firebase initialized successfully.');
+    } catch (e) {
+      print('Firebase initialization error: $e');
+    }
+  } else {
+    print('Firebase configuration placeholders detected. Skipping initialization.');
+  }
+
   // Initialize background service
-  await BackgroundService.initialize();
+  try {
+    await BackgroundService.initialize();
+  } catch (e) {
+    print('Background service initialization error: $e');
+  }
   
   runApp(const MyApp());
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/emergency_contact.dart';
-import '../../services/emergency_contact_service.dart';
+import '../models/emergency_contact.dart';
+import '../services/emergency_contact_service.dart';
 
 class AddEditContactScreen extends StatefulWidget {
   final EmergencyContact? contact;

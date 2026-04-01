@@ -1,91 +1,69 @@
 import 'dart:async';
-import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:workmanager/workmanager.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'geofence_service.dart';
 import 'panic_detection_service.dart';
 
 class BackgroundService {
-  static const String taskName = 'sosBackgroundTask';
+  static final BackgroundService _instance = BackgroundService._internal();
+  factory BackgroundService() => _instance;
+  BackgroundService._internal();
+
+  static bool _isInitialized = false;
   static final GeofenceService _geofenceService = GeofenceService();
   static final PanicDetectionService _panicService = PanicDetectionService();
 
+  /// Initialize background service
   static Future<void> initialize() async {
-    // Initialize Flutter Background Service
-    final service = FlutterBackgroundService();
-    await service.configure(
-      androidConfiguration: AndroidConfiguration(
-        onStart: onStart,
-        autoStart: true,
-        isForegroundMode: true,
-        notificationChannelId: 'sos_safety_channel',
-        initialNotificationTitle: 'SOS Safety App',
-        initialNotificationContent: 'Safety monitoring is active',
-        foregroundServiceNotificationId: 888,
-      ),
-      iosConfiguration: IosConfiguration(
-        autoStart: true,
-        onForeground: onStart,
-        onBackground: onIosBackground,
-      ),
-    );
+    if (_isInitialized) return;
 
-    // Initialize WorkManager for periodic tasks
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
-    );
+    // Request necessary permissions
+    await _requestPermissions();
 
-    // Register periodic task (runs every 15 minutes)
-    await Workmanager().registerPeriodicTask(
-      taskName,
-      taskName,
-      frequency: const Duration(minutes: 15),
-      constraints: Constraints(
-        networkType: NetworkType.not_required,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresDeviceIdle: false,
-        requiresStorageNotLow: false,
-      ),
-    );
+    _isInitialized = true;
   }
 
-  @pragma('vm:entry-point')
-  static void onStart(ServiceInstance service) async {
+  /// Start background monitoring
+  static Future<void> startMonitoring() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     // Start geofence monitoring
     await _geofenceService.startMonitoring();
-    
+
     // Start panic detection
     await _panicService.startMonitoring();
-
-    service.on('stopService').listen((event) {
-      service.stopSelf();
-    });
   }
 
-  @pragma('vm:entry-point')
-  static Future<bool> onIosBackground(ServiceInstance service) async {
-    await _geofenceService.startMonitoring();
-    await _panicService.startMonitoring();
-    return true;
-  }
-
-  @pragma('vm:entry-point')
-  static void callbackDispatcher() {
-    Workmanager().executeTask((task, inputData) async {
-      // Periodic background task
-      await _geofenceService.refreshZones();
-      return Future.value(true);
-    });
-  }
-
-  static Future<void> startMonitoring() async {
-    await _geofenceService.startMonitoring();
-    await _panicService.startMonitoring();
-  }
-
+  /// Stop background monitoring
   static Future<void> stopMonitoring() async {
     _geofenceService.stopMonitoring();
     _panicService.stopMonitoring();
   }
+
+  /// Get monitoring status
+  static bool get isGeofenceActive => _geofenceService.isMonitoring;
+  static bool get isPanicDetectionActive => _panicService.isMonitoring;
+}
+
+/// Request necessary permissions for background service
+Future<void> _requestPermissions() async {
+  // Location permission
+  final locationStatus = await Permission.location.request();
+
+  // Activity recognition (panic detection) on Android only
+  PermissionStatus activityStatus = PermissionStatus.denied;
+  if (!kIsWeb && Platform.isAndroid) {
+    activityStatus = await Permission.activityRecognition.request();
+  }
+
+  // Notification permission (for foreground service)
+  if (!kIsWeb && Platform.isAndroid) {
+    await Permission.notification.request();
+  }
+
+  print('Location: ${locationStatus.isDenied ? "Denied" : "Granted"}');
+  print('Activity: ${activityStatus.isDenied ? "Denied" : "Granted"}');
 }

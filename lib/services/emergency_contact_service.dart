@@ -5,25 +5,30 @@ import '../models/emergency_contact.dart';
 import 'auth_service.dart';
 
 class EmergencyContactService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthService _authService = AuthService();
   static const String _localStorageKey = 'emergency_contacts';
 
-  String? get _userId => _authService.currentUser?.uid;
+  FirebaseFirestore? get _firestore => AuthService.firebaseAvailable ? FirebaseFirestore.instance : null;
+
+  Future<String?> get _userId async {
+    final user = await _authService.currentUser;
+    return user?.uid;
+  }
 
   Future<List<EmergencyContact>> getEmergencyContacts() async {
     // Try to get from local storage first (offline-first)
     List<EmergencyContact> localContacts = await _getLocalContacts();
     
-    if (_userId == null) {
+    final userId = await _userId;
+    if (userId == null || _firestore == null) {
       return localContacts;
     }
 
     try {
       // Try to sync from Firestore
-      QuerySnapshot snapshot = await _firestore
+      QuerySnapshot snapshot = await _firestore!
           .collection('users')
-          .doc(_userId)
+          .doc(userId)
           .collection('emergency_contacts')
           .get();
 
@@ -44,15 +49,23 @@ class EmergencyContactService {
   }
 
   Future<void> addEmergencyContact(EmergencyContact contact) async {
-    if (_userId == null) {
+    final userId = await _userId;
+    if (userId == null) {
       throw Exception('User not authenticated');
+    }
+
+    if (_firestore == null) {
+      List<EmergencyContact> contacts = await _getLocalContacts();
+      contacts.add(contact.copyWith(id: DateTime.now().millisecondsSinceEpoch.toString()));
+      await _saveLocalContacts(contacts);
+      return;
     }
 
     try {
       // Add to Firestore
-      DocumentReference docRef = await _firestore
+      DocumentReference docRef = await _firestore!
           .collection('users')
-          .doc(_userId)
+          .doc(userId)
           .collection('emergency_contacts')
           .add(contact.toMap());
 
@@ -70,18 +83,23 @@ class EmergencyContactService {
   }
 
   Future<void> updateEmergencyContact(EmergencyContact contact) async {
-    if (_userId == null || contact.id == null) {
+    final userId = await _userId;
+    if (userId == null || contact.id == null) {
       throw Exception('Invalid contact or user not authenticated');
     }
 
     try {
-      // Update in Firestore
-      await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('emergency_contacts')
-          .doc(contact.id)
-          .update(contact.toMap());
+      if (_firestore != null) {
+        final userId = await _userId;
+        if (userId != null) {
+          await _firestore!
+              .collection('users')
+              .doc(userId)
+              .collection('emergency_contacts')
+              .doc(contact.id)
+              .update(contact.toMap());
+        }
+      }
 
       // Update local storage
       List<EmergencyContact> contacts = await _getLocalContacts();
@@ -103,18 +121,21 @@ class EmergencyContactService {
   }
 
   Future<void> deleteEmergencyContact(String contactId) async {
-    if (_userId == null) {
+    final userId = await _userId;
+    if (userId == null) {
       throw Exception('User not authenticated');
     }
 
     try {
       // Delete from Firestore
-      await _firestore
-          .collection('users')
-          .doc(_userId)
-          .collection('emergency_contacts')
-          .doc(contactId)
-          .delete();
+      if (_firestore != null) {
+        await _firestore!
+            .collection('users')
+            .doc(userId)
+            .collection('emergency_contacts')
+            .doc(contactId)
+            .delete();
+      }
 
       // Update local storage
       List<EmergencyContact> contacts = await _getLocalContacts();

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/geofence_service.dart';
 import '../services/panic_detection_service.dart';
+import '../services/background_service.dart';
 import 'auth/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -65,14 +66,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    return FutureBuilder<UserModel?>(
+      future: _authService.currentUser,
+      builder: (context, snapshot) {
+        final user = snapshot.data;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: ListView(
-        children: [
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Settings'),
+          ),
+          body: ListView(
+            children: [
           // User Info
           ListTile(
             leading: CircleAvatar(
@@ -190,5 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  },
+);
   }
 }

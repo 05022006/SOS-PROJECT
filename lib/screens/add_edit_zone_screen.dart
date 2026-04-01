@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../models/safe_zone.dart';
-import '../../services/safe_zone_service.dart';
-import '../../services/location_service.dart';
+import '../models/safe_zone.dart';
+import '../services/safe_zone_service.dart';
+import '../services/location_service.dart';
 
 class AddEditZoneScreen extends StatefulWidget {
   final SafeZone? zone;

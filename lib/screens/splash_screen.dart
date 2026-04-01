@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'auth/login_screen.dart';
 
@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     
     if (!mounted) return;
 
-    User? user = FirebaseAuth.instance.currentUser;
+    final user = await AuthService().currentUser;
     if (user != null) {
       Navigator.pushReplacement(
         context,
